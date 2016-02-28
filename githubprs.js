@@ -70,7 +70,7 @@ var getPRsMatching = function getPRsMatching(regex) {
 }
 
 var closePR = function closePR(update) {
-    var repo = store[update.pull_request.repository.full_name];
+    var repo = store[update.repository.full_name];
     for (var i = 0; i < repo.length; i++) {
         if (repo[i].id == update.pull_request.id) {
             repo.splice(i, 1);
@@ -81,7 +81,7 @@ var closePR = function closePR(update) {
 }
 
 var updatePR = function updatePR(update) {
-    var repo = store[update.pull_request.repository.full_name];
+    var repo = store[update.repository.full_name];
     for (var i = 0; i < repo.length; i++) {
         if (repo[i].id == update.pull_request.id) {
             repo[i] = update.pull_request;
@@ -92,18 +92,18 @@ var updatePR = function updatePR(update) {
 }
 
 var createPR = function createPR(update) {
-    var repo = store[update.pull_request.repository.full_name];
+    var repo = store[update.repository.full_name];
     repo.push(update.pull_request);
 }
 
 var pushPRUpdate = function pushPRUpdate(update) {
-    if (update.pull_request.repository.owner.login !== process.env.GITHUB_ORG) {
+    if (update.repository.owner.login !== process.env.GITHUB_ORG) {
         throw "Unknown org";
     }
 
-    var repo = store[update.pull_request.repository.full_name];
+    var repo = store[update.repository.full_name];
     if (!repo) {
-        repo = store[update.pull_request.repository.full_name] = [];
+        repo = store[update.repository.full_name] = [];
     }
 
     if (update.action == "closed") {
