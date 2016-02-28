@@ -81,4 +81,4 @@ github.authenticate({
 
 updateStoredPRs();
 
-setInterval(updateStoredPRs, 60000);
+setInterval(updateStoredPRs, 10*60*1000);
