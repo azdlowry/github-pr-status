@@ -14,6 +14,12 @@ function update(req, res, next) {
 		githubprs.pushPRUpdate(req.body);
     	res.send('Thanks!');
 	}
+	if ( req.header('X-GitHub-Event') == 'pull_request_review_comment') {
+		githubprs.pushCommentUpdate(req.body);
+    	res.send('Thanks for commenting!');
+	}
+
+	pushCommentUpdate
     next();
 }
 

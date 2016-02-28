@@ -132,9 +132,23 @@ var pushPRUpdate = function pushPRUpdate(update) {
     }
 }
 
+var pushCommentUpdate = function pushCommentUpdate(update) {
+    if (update.repository.owner.login !== process.env.GITHUB_ORG) {
+        throw "Unknown org";
+    }
+
+    var repo = store[update.repository.full_name];
+    if (!repo) {
+        repo = store[update.repository.full_name] = [];
+    }
+    
+    updatePullRequest(update.repository.owner.login, update.repository.name, update.pull_request.number);
+}
+
 module.exports = {
     getPRsMatching: getPRsMatching,
-    pushPRUpdate: pushPRUpdate
+    pushPRUpdate: pushPRUpdate,
+    pushCommentUpdate: pushCommentUpdate
 };
 
 github.authenticate({
