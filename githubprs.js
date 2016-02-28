@@ -34,9 +34,56 @@ var getRest = function getRest(accumulator, lastres, callback) {
     });
 };
 
+var closePR = function closePR(update) {
+    var repo = store[update.repository.full_name];
+    for (var i = 0; i < repo.length; i++) {
+        if (repo[i].id == update.pull_request.id) {
+            repo.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+}
+
+var updatePRStore = function updatePRStore(user, reponame, prnumber, prinfo) {
+    var repo = store[user + '/' + reponame];
+    for (var i = 0; i < repo.length; i++) {
+        if (repo[i].number == prnumber) {
+            repo[i] = prinfo;
+            return true;
+        }
+    }
+    return false;
+}
+
+var createPRStore = function createPR(user, reponame, prnumber, prinfo) {
+    var repo = store[user + '/' + reponame];
+    repo.push(prinfo);
+}
+
+var updatePullRequest = function updatePullRequest(user, reponame, prnumber) {
+    github.pullRequests.get({
+        user: user,
+        repo: reponame,
+        number: prnumber
+    }, function(err, prinfo) {
+        if (err) return console.err(err);
+
+        if (!updatePRStore(user, reponame, prnumber, prinfo)) {
+            createPRStore(user, reponame, prnumber, prinfo);
+        }
+    });
+}
+
 var updatePullRequestsForRepo = function updatePullRequestsForRepo(user, reponame) {
     getPullRequestForRepo(user, reponame, function(err, prres) {
-        store[user + '/' + reponame] = prres;
+        if (err) return console.err(err);
+
+        store[user + '/' + reponame] = [];
+        for (var i = 0; i < prres.length; i++) {
+            var pr = prres[i];
+            updatePullRequest(user, reponame, pr.number);
+        }
     });
 }
 
@@ -49,7 +96,6 @@ var updateStoredPRs = function updateStoredPRs() {
 
         getRest(res, res, function(err, res) {
 
-            // console.log(JSON.stringify(res, null, 4));
             for (var i = 0; i < res.length; i++) {
                 var repo = res[i];
                 updatePullRequestsForRepo(repo.owner.login, repo.name);
@@ -69,33 +115,6 @@ var getPRsMatching = function getPRsMatching(regex) {
     return output;
 }
 
-var closePR = function closePR(update) {
-    var repo = store[update.repository.full_name];
-    for (var i = 0; i < repo.length; i++) {
-        if (repo[i].id == update.pull_request.id) {
-            repo.splice(i, 1);
-            return true;
-        }
-    }
-    return false;
-}
-
-var updatePR = function updatePR(update) {
-    var repo = store[update.repository.full_name];
-    for (var i = 0; i < repo.length; i++) {
-        if (repo[i].id == update.pull_request.id) {
-            repo[i] = update.pull_request;
-            return true;
-        }
-    }
-    return false;
-}
-
-var createPR = function createPR(update) {
-    var repo = store[update.repository.full_name];
-    repo.push(update.pull_request);
-}
-
 var pushPRUpdate = function pushPRUpdate(update) {
     if (update.repository.owner.login !== process.env.GITHUB_ORG) {
         throw "Unknown org";
@@ -109,9 +128,7 @@ var pushPRUpdate = function pushPRUpdate(update) {
     if (update.action == "closed") {
         closePR(update);
     } else {
-        if (!updatePR(update)) {
-            createPR(update);
-        }
+        updatePullRequest(update.repository.owner.login, update.repository.name, update.pull_request.number);
     }
 }
 
@@ -127,5 +144,3 @@ github.authenticate({
 });
 
 updateStoredPRs();
-
-setInterval(updateStoredPRs, 60*60*1000);
