@@ -69,8 +69,55 @@ var getPRsMatching = function getPRsMatching(regex) {
     return output;
 }
 
+var closePR = function closePR(update) {
+    var repo = store[update.pull_request.repository.full_name];
+    for (var i = 0; i < repo.length; i++) {
+        if (repo[i].id == update.pull_request.id) {
+            repo.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+}
+
+var updatePR = function updatePR(update) {
+    var repo = store[update.pull_request.repository.full_name];
+    for (var i = 0; i < repo.length; i++) {
+        if (repo[i].id == update.pull_request.id) {
+            repo[i] = update.pull_request;
+            return true;
+        }
+    }
+    return false;
+}
+
+var createPR = function createPR(update) {
+    var repo = store[update.pull_request.repository.full_name];
+    repo.push(update.pull_request);
+}
+
+var pushPRUpdate = function pushPRUpdate(update) {
+    if (update.pull_request.repository.owner.login !== process.env.GITHUB_ORG) {
+        throw "Unknown org";
+    }
+
+    var repo = store[update.pull_request.repository.full_name];
+    if (!repo) {
+        repo = store[update.pull_request.repository.full_name] = [];
+    }
+
+    if (update.action == "closed") {
+        closePR(update);
+    } else {
+        if (!updatePR(update)) {
+            createPR(update);
+        }
+    }
+}
+
 module.exports = {
-    getPRsMatching: getPRsMatching
+    getPRsMatching: getPRsMatching,
+    pushPRUpdate: pushPRUpdate
 };
 
 github.authenticate({
@@ -81,4 +128,4 @@ github.authenticate({
 
 updateStoredPRs();
 
-setInterval(updateStoredPRs, 10*60*1000);
+setInterval(updateStoredPRs, 60*60*1000);
