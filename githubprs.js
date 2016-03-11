@@ -34,10 +34,10 @@ var getRest = function getRest(accumulator, lastres, callback) {
     });
 };
 
-var closePR = function closePR(update) {
-    var repo = store[update.repository.full_name];
+var closePR = function closePR(repoFullName, prId) {
+    var repo = store[repoFullName];
     for (var i = 0; i < repo.length; i++) {
-        if (repo[i].id == update.pull_request.id) {
+        if (repo[i].id == prId) {
             repo.splice(i, 1);
             return true;
         }
@@ -68,6 +68,9 @@ var updatePullRequest = function updatePullRequest(user, reponame, prnumber) {
         number: prnumber
     }, function(err, prinfo) {
         if (err) return console.err(err);
+
+        if (prinfo.state = "closed")
+            closePR(user + '/' + reponame, prnumber);
 
         if (!updatePRStore(user, reponame, prnumber, prinfo)) {
             createPRStore(user, reponame, prnumber, prinfo);
@@ -126,7 +129,7 @@ var pushPRUpdate = function pushPRUpdate(update) {
     }
 
     if (update.action == "closed") {
-        closePR(update);
+        closePR(update.repository.full_name, update.pull_request.id);
     } else {
         updatePullRequest(update.repository.owner.login, update.repository.name, update.pull_request.number);
     }
