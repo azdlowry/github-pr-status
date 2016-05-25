@@ -67,7 +67,7 @@ var updatePullRequest = function updatePullRequest(user, reponame, prnumber) {
         repo: reponame,
         number: prnumber
     }, function(err, prinfo) {
-        if (err) return console.err(err);
+        if (err) return console.error(err);
 
         if (prinfo.state = "closed")
             closePR(user + '/' + reponame, prnumber);
@@ -80,7 +80,7 @@ var updatePullRequest = function updatePullRequest(user, reponame, prnumber) {
 
 var updatePullRequestsForRepo = function updatePullRequestsForRepo(user, reponame) {
     getPullRequestForRepo(user, reponame, function(err, prres) {
-        if (err) return console.err(err);
+        if (err) return console.error(err);
 
         store[user + '/' + reponame] = [];
         for (var i = 0; i < prres.length; i++) {
