@@ -19,7 +19,13 @@ function update(req, res, next) {
     	res.send('Thanks for commenting!');
 	}
 
-	pushCommentUpdate
+    next();
+}
+
+function refreshAll(req, res, next) {
+	githubprs.refreshAllPRs();
+	res.send('Refreshing all...');
+
     next();
 }
 
@@ -30,6 +36,7 @@ server.use(restify.bodyParser());
 server.get('/pullRequests', respond);
 server.head('/pullRequests', respond);
 server.post('/webhooks/github', update);
+server.post('/refreshAll', refreshAll);
 
 server.listen(process.env.PORT || 4567, function() {
     console.log('%s listening at %s', server.name, server.url);

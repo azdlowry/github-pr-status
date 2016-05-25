@@ -91,6 +91,8 @@ var updatePullRequestsForRepo = function updatePullRequestsForRepo(user, reponam
 }
 
 var updateStoredPRs = function updateStoredPRs() {
+    store = {};
+
     github.repos.getFromOrg({
         org: process.env.GITHUB_ORG,
         per_page: 100
@@ -151,7 +153,8 @@ var pushCommentUpdate = function pushCommentUpdate(update) {
 module.exports = {
     getPRsMatching: getPRsMatching,
     pushPRUpdate: pushPRUpdate,
-    pushCommentUpdate: pushCommentUpdate
+    pushCommentUpdate: pushCommentUpdate,
+    refreshAllPRs: updateStoredPRs
 };
 
 github.authenticate({
